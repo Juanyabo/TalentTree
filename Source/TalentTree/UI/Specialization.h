@@ -8,6 +8,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "TalentTree/UI/Structs/Tier.h"
 #include "Specialization.generated.h"
 
 class UTalentButton;
@@ -23,16 +24,8 @@ class TALENTTREE_API USpecialization : public UUserWidget
 	TArray<int32> PointsRequiredForTiers;
 
 	UPROPERTY()
-	int32 TotalPointsSpent;
-
-	UPROPERTY()
-	int32 MaxTier;
-
-	TMultiMap<int32, UTalentButton*> Talents;
-
-	UPROPERTY()
-	TArray<int32> TierPoints;
-
+	TArray<FTier> Tiers;
+	
 	UFUNCTION()
 	void AddTalents(UWidget* Parent);
 
@@ -40,21 +33,16 @@ class TALENTTREE_API USpecialization : public UUserWidget
 	void UpdatePointsSpent(UTalentButton* Talent, const int32 Increment);
 	
 	UFUNCTION()
-	void TierLock(const int32 Key) const;
-	
-	UFUNCTION()
-	void TierUnLock(const int32 Key) const;
+	void HandleTier(const int32 Tier, const bool bLock) const;
 
 public:
 	FOnTotalPointsSpent OnTotalPointsSpend;
 
 	UFUNCTION()
-	void NoPointsAvailable() const;
-
-	UFUNCTION()
-	void PointsAvailable() const;
+	void HandleTalentsVisualOnCharacterPoints(const int32 TalentPointsAvailable) const;
 	
-	FORCEINLINE int32 GetTotalPointsSpent() const { return TotalPointsSpent; }
+	UFUNCTION()
+	int32 GetTotalPointsSpent() const;
 
 protected:
 	virtual void NativeConstruct() override;

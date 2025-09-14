@@ -16,6 +16,7 @@ void UTalentTreeSelector::NativeConstruct()
 	Super::NativeConstruct();
 	
 	UnselectedColor = FirstSpecializationName->GetColorAndOpacity();
+	bCanAddPoints = false;
 	ShowFirstSpecialization();
 	
 	Close->OnClicked.AddDynamic(this, &UTalentTreeSelector::HideTalentTreeSelector);
@@ -99,19 +100,29 @@ void UTalentTreeSelector::UpdatePointsSpentOnThirdSpecialization(const int32 Poi
 	CurrentTalentPoints->SetText(FText::AsNumber(PointsSpent));
 }
 
-void UTalentTreeSelector::UpdateTotalPointsSpent(const int32 PointsSpent) const
+void UTalentTreeSelector::UpdateTotalPointsSpent(const int32 PointsSpent)
 {
 	TotalPoints->SetText(FText::AsNumber(PointsSpent));
-	if (PointsSpent == 0)
+	bool bShouldUpdate = false;
+	
+	if (PointsSpent > 0 && !bCanAddPoints || PointsSpent == 0)
 	{
-		FirstSpecializationTree->NoPointsAvailable();
-		SecondSpecializationTree->NoPointsAvailable();
-		ThirdSpecializationTree->NoPointsAvailable();
+		bShouldUpdate = true;
 	}
-	else if (PointsSpent >= 1)
+
+	if (bShouldUpdate)
 	{
-		FirstSpecializationTree->PointsAvailable();
-		SecondSpecializationTree->PointsAvailable();
-		ThirdSpecializationTree->PointsAvailable();
+		FirstSpecializationTree->HandleTalentsVisualOnCharacterPoints(PointsSpent);
+		SecondSpecializationTree->HandleTalentsVisualOnCharacterPoints(PointsSpent);
+		ThirdSpecializationTree->HandleTalentsVisualOnCharacterPoints(PointsSpent);
+	}
+	
+	if (PointsSpent > 0 )
+	{
+		bCanAddPoints = true;
+	}
+	else
+	{
+		bCanAddPoints = false;
 	}
 }

@@ -23,8 +23,8 @@ class TALENTTREE_API UTalentButton : public UUserWidget
 {
 	GENERATED_BODY()
 
-	const float POSITION_TO_REDUCE_DESCRIPTION_WHEN_MAXED = 50.f;
-	const float SIZE_TO_REDUCE_DESCRIPTION_WHEN_MAXED = 100.f;
+	const float POSITION_TO_REDUCE_DESCRIPTION_WHEN_MAXED_OR_LOCKED = 50.f;
+	const float SIZE_TO_REDUCE_DESCRIPTION_WHEN_MAXED_OR_LOCKED = 100.f;
 	
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
 	UButton* Talent;
@@ -87,6 +87,12 @@ class TALENTTREE_API UTalentButton : public UUserWidget
 	float DescriptionTabYSize;
 
 	UPROPERTY()
+	float DescriptionTabYPositionReduced;
+
+	UPROPERTY()
+	float DescriptionTabYSizeReduced;
+
+	UPROPERTY()
 	FLinearColor AvailableRankColor;
 
 	UPROPERTY()
@@ -131,14 +137,14 @@ class TALENTTREE_API UTalentButton : public UUserWidget
 	UFUNCTION()
 	void UpdateDescriptionTab() const;
 
+	UFUNCTION()
+	void HandleNextDescription(const bool bShow) const;
+	
 public:
 	FOnTalentClicked OnTalentClicked;
 
 	UFUNCTION()
-	void LockTalent();
-
-	UFUNCTION()
-	void UnlockTalent();
+	void HandleTalent(const bool bLock);
 
 	FORCEINLINE UBorder* GetRankBorder() const { return RankBorder; }
 	FORCEINLINE int32 GetMaxRank() const { return MaxRank; }

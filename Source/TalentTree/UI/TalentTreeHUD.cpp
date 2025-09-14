@@ -30,6 +30,7 @@ void ATalentTreeHUD::HandleTalentTreeSelector() const
 			TalentTreeSelectorInstance->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 			return;
 		}
+		
 		TalentTreeSelectorInstance->HideTalentTreeSelector();
 	}
 }

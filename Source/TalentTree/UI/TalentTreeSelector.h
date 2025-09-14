@@ -73,6 +73,8 @@ class TALENTTREE_API UTalentTreeSelector : public UUserWidget
 
 	FSlateColor UnselectedColor;
 
+	bool bCanAddPoints;
+
 	UFUNCTION()
 	void ShowFirstSpecialization();
 
@@ -92,7 +94,7 @@ class TALENTTREE_API UTalentTreeSelector : public UUserWidget
 	void UpdatePointsSpentOnThirdSpecialization(const int32 PointsSpent) const;
 
 	UFUNCTION()
-	void UpdateTotalPointsSpent(const int32 PointsSpent) const;
+	void UpdateTotalPointsSpent(const int32 PointsSpent);
 	
 public:
 	UFUNCTION()

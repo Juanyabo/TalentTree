@@ -23,8 +23,13 @@ void UTalentButton::NativeConstruct()
 	if (const UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(DescriptionTab->Slot))
 	{
 		DescriptionTabYPosition = CanvasSlot->GetPosition().Y;
+		DescriptionTabYPositionReduced = CanvasSlot->GetPosition().Y;
 		DescriptionTabYSize = CanvasSlot->GetSize().Y;
+		DescriptionTabYSizeReduced = CanvasSlot->GetSize().Y;
 	}
+
+	DescriptionTabYPositionReduced += POSITION_TO_REDUCE_DESCRIPTION_WHEN_MAXED_OR_LOCKED;
+	DescriptionTabYSizeReduced -= SIZE_TO_REDUCE_DESCRIPTION_WHEN_MAXED_OR_LOCKED;
 	
 	AvailableRankColor = FLinearColor(
 		CurrentRank->GetColorAndOpacity().GetSpecifiedColor().R,
@@ -157,28 +162,29 @@ void UTalentButton::HandleRankVisual() const
 	}
 }
 
-void UTalentButton::LockTalent()
+void UTalentButton::HandleTalent(const bool bLock)
 {
-	bIsLocked = true;
-	UpdateVisualState();
-	HandleRankIncrement(false);
-}
-
-void UTalentButton::UnlockTalent()
-{
-	bIsLocked = false;
+	bIsLocked = bLock;
+	
+	if (bIsLocked)
+	{
+		HandleRankIncrement(false);
+	}
+	
 	UpdateVisualState();
 }
 
 void UTalentButton::UpdateVisualState() const
 {
 	FButtonStyle ButtonStyle = Talent->GetStyle();
+	
 	if (bIsLocked)
 	{
 		ButtonStyle.SetNormal(DisabledBrush);
 		ButtonStyle.SetHovered(DisabledBrush);
 		ButtonStyle.SetPressed(DisabledBrush);
 		RankBorder->SetVisibility(ESlateVisibility::Collapsed);
+		HandleNextDescription(false);
 	}
 	else
 	{
@@ -186,30 +192,46 @@ void UTalentButton::UpdateVisualState() const
 		ButtonStyle.SetHovered(HoveredBrush);
 		ButtonStyle.SetPressed(PressedBrush);
 		RankBorder->SetVisibility(ESlateVisibility::HitTestInvisible);
+		HandleNextDescription(true);
 	}
+	
 	Talent->SetStyle(ButtonStyle);
 }
 
 void UTalentButton::UpdateDescriptionTab() const
 {
+	if (Counter < MaxRank)
+	{
+		CurrentRank->SetColorAndOpacity(AvailableRankColor);
+		HandleNextDescription(true);
+	}
+	else
+	{
+		CurrentRank->SetColorAndOpacity(TalentMaxedColor);
+		HandleNextDescription(false);
+	}
+}
+
+void UTalentButton::HandleNextDescription(const bool bShow) const
+{
 	if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(DescriptionTab->Slot))
 	{
 		FVector2D Pos = CanvasSlot->GetPosition();
 		FVector2D Size = CanvasSlot->GetSize();
-		if (Counter < MaxRank)
+		
+		if (bShow)
 		{
-			CurrentRank->SetColorAndOpacity(AvailableRankColor);
 			NextRankVB->SetVisibility(ESlateVisibility::HitTestInvisible);
 			Pos.Y = DescriptionTabYPosition;
 			Size.Y = DescriptionTabYSize;
 		}
 		else
 		{
-			CurrentRank->SetColorAndOpacity(TalentMaxedColor);
 			NextRankVB->SetVisibility(ESlateVisibility::Collapsed);
-			Pos.Y += POSITION_TO_REDUCE_DESCRIPTION_WHEN_MAXED;
-			Size.Y -= SIZE_TO_REDUCE_DESCRIPTION_WHEN_MAXED;
+			Pos.Y = DescriptionTabYPositionReduced;
+			Size.Y = DescriptionTabYSizeReduced;
 		}
+		
 		CanvasSlot->SetPosition(Pos);
 		CanvasSlot->SetSize(Size);
 	}
