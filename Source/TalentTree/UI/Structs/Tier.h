@@ -1,3 +1,9 @@
+// 
+// Tier.h
+// 
+// Struct for storing a tier data
+// 
+
 #pragma once
 
 #include "CoreMinimal.h"

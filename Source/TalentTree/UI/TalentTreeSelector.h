@@ -71,8 +71,10 @@ class TALENTTREE_API UTalentTreeSelector : public UUserWidget
 	UPROPERTY(EditAnywhere, Category="Selecting Specializtion", meta = (AllowPrivateAccess = true))
 	FLinearColor SelectedSpecialization;
 
+	UPROPERTY()
 	FSlateColor UnselectedColor;
 
+	UPROPERTY()
 	bool bCanAddPoints;
 
 	UFUNCTION()
