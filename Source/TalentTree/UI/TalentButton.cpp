@@ -19,11 +19,13 @@ void UTalentButton::NativeConstruct()
 
 	Counter = 0;
 	bIsLocked = false;
+	
 	if (const UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(DescriptionTab->Slot))
 	{
 		DescriptionTabYPosition = CanvasSlot->GetPosition().Y;
 		DescriptionTabYSize = CanvasSlot->GetSize().Y;
 	}
+	
 	AvailableRankColor = FLinearColor(
 		CurrentRank->GetColorAndOpacity().GetSpecifiedColor().R,
 		CurrentRank->GetColorAndOpacity().GetSpecifiedColor().G,
@@ -31,7 +33,6 @@ void UTalentButton::NativeConstruct()
 		CurrentRank->GetColorAndOpacity().GetSpecifiedColor().A
 		);
 	
-	//Changes only the image and keeps all other configurations to button styles
 	FButtonStyle ButtonStyle = Talent->GetStyle();
 	NormalBrush = ButtonStyle.Normal;
 	HoveredBrush = ButtonStyle.Hovered;
@@ -45,19 +46,7 @@ void UTalentButton::NativeConstruct()
 	ButtonStyle.SetHovered(HoveredBrush);
 	ButtonStyle.SetPressed(PressedBrush);
 	ButtonStyle.SetDisabled(DisabledBrush);
-	Talent->SetStyle(ButtonStyle);
 	
-	Title->SetText(FText::FromString(TalentName));
-	TotalRank->SetText(FText::AsNumber(MaxRank));
-	CurrentDescription->SetText(FText::FromString(Description));
-	NextDescription->SetText(FText::FromString(Description));
-	HideDescriptionTab();
-
-	//Button Bindings
-	Talent->OnClicked.AddDynamic(this, &UTalentButton::AddRank);
-	Talent->OnHovered.AddDynamic(this, &UTalentButton::ShowDescriptionTab);
-	Talent->OnUnhovered.AddDynamic(this, &UTalentButton::HideDescriptionTab);
-
 	if (const APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
 	{
 		if (ATalentTreeCharacter* Character = Cast<ATalentTreeCharacter>(PlayerController->GetPawn()))
@@ -65,42 +54,34 @@ void UTalentButton::NativeConstruct()
 			TalentTreeCharacter = Character;
 		}
 	}
+
+	Talent->SetStyle(ButtonStyle);
+	Title->SetText(FText::FromString(TalentName));
+	TotalRank->SetText(FText::AsNumber(MaxRank));
+	CurrentDescription->SetText(FText::FromString(Description));
+	NextDescription->SetText(FText::FromString(Description));
+	
+	Talent->OnClicked.AddDynamic(this, &UTalentButton::AddRank);
+	Talent->OnHovered.AddDynamic(this, &UTalentButton::ShowDescriptionTab);
+	Talent->OnUnhovered.AddDynamic(this, &UTalentButton::HideDescriptionTab);
+
+	HideDescriptionTab();
 }
 
 FReply UTalentButton::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
 	{
-		if (!bIsLocked)
-		{
-			if (Counter > 0)
-			{
-				--Counter;
-				TalentTreeCharacter->SetTalentPoints(TalentTreeCharacter->GetTalentPoints() + 1);
-				OnTalentClicked.Broadcast(this, -1);
-				(void) TalentTreeCharacter->OnTalentPointsUpdate.ExecuteIfBound(TalentTreeCharacter->GetTalentPoints());
-				VisualUpdate();
-			}
-			return FReply::Handled();
-		}
+		HandleRankIncrement(false);
+		return FReply::Handled();
 	}
-
+	
 	return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 }
 
 void UTalentButton::AddRank()
 {
-	if (!bIsLocked && TalentTreeCharacter->GetTalentPoints() > 0)
-	{
-		if (Counter < MaxRank)
-		{
-			++Counter;
-			TalentTreeCharacter->SetTalentPoints(TalentTreeCharacter->GetTalentPoints() - 1);
-			OnTalentClicked.Broadcast(this, 1);
-			(void) TalentTreeCharacter->OnTalentPointsUpdate.ExecuteIfBound(TalentTreeCharacter->GetTalentPoints());
-			VisualUpdate();
-		}
-	}
+	HandleRankIncrement(true);
 }
 
 void UTalentButton::ShowDescriptionTab()
@@ -113,7 +94,46 @@ void UTalentButton::HideDescriptionTab()
 	DescriptionTab->SetVisibility(ESlateVisibility::Collapsed);
 }
 
-void UTalentButton::VisualUpdate() const
+void UTalentButton::HandleRankIncrement(const bool bIsAdding)
+{
+	if (bIsAdding)
+	{
+		if (!bIsLocked && TalentTreeCharacter->GetTalentPoints() > 0 && Counter < MaxRank)
+		{
+			ApplyRankChange(1);
+		}
+	}
+	else
+	{
+		if (!bIsLocked && Counter > 0)
+		{
+			ApplyRankChange(-1);
+		}
+		else if (bIsLocked && Counter > 0)
+		{
+			ResetRank();
+		}
+	}
+}
+
+void UTalentButton::ApplyRankChange(const int32 Increment)
+{
+	Counter += Increment;
+	TalentTreeCharacter->SetTalentPoints(TalentTreeCharacter->GetTalentPoints() - Increment);
+	OnTalentClicked.Broadcast(this, Increment);
+	(void)TalentTreeCharacter->OnTalentPointsUpdate.ExecuteIfBound(TalentTreeCharacter->GetTalentPoints());
+	HandleRankVisual();
+}
+
+void UTalentButton::ResetRank()
+{
+	TalentTreeCharacter->SetTalentPoints(TalentTreeCharacter->GetTalentPoints() + Counter);
+	OnTalentClicked.Broadcast(this, -Counter);
+	Counter = 0;
+	HandleRankVisual();
+}
+
+void UTalentButton::HandleRankVisual() const
 {
 	const FLinearColor CurrentRankColor = FLinearColor(
 		CurrentRank->GetColorAndOpacity().GetSpecifiedColor().R,
@@ -121,63 +141,76 @@ void UTalentButton::VisualUpdate() const
 		CurrentRank->GetColorAndOpacity().GetSpecifiedColor().B,
 		CurrentRank->GetColorAndOpacity().GetSpecifiedColor().A
 		);
+	
 	CurrentRank->SetText(FText::AsNumber(Counter));
 	CurrentRankTab->SetText(FText::AsNumber(Counter));
+	
 	if (!AvailableRankColor.Equals(CurrentRankColor))
 	{
-		CurrentRank->SetColorAndOpacity(AvailableRankColor);
-		NextRankVB->SetVisibility(ESlateVisibility::HitTestInvisible);
-		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(DescriptionTab->Slot))
-		{
-			FVector2D Pos = CanvasSlot->GetPosition();
-			FVector2D Size = CanvasSlot->GetSize();
-			Pos.Y = DescriptionTabYPosition;
-			Size.Y = DescriptionTabYSize;
-			CanvasSlot->SetPosition(Pos);
-			CanvasSlot->SetSize(Size);
-		}
+		UpdateDescriptionTab();
+		return;
 	}
+	
 	if (Counter == MaxRank)
 	{
-		CurrentRank->SetColorAndOpacity(TalentMaxedColor);
-		NextRankVB->SetVisibility(ESlateVisibility::Collapsed);
-		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(DescriptionTab->Slot))
-		{
-			FVector2D Pos = CanvasSlot->GetPosition();
-			FVector2D Size = CanvasSlot->GetSize();
-			Pos.Y += POSITION_TO_REDUCE_DESCRIPTION_WHEN_MAXED;
-			Size.Y -= SIZE_TO_REDUCE_DESCRIPTION_WHEN_MAXED;
-			CanvasSlot->SetPosition(Pos);
-			CanvasSlot->SetSize(Size);
-		}
+		UpdateDescriptionTab();
 	}
 }
 
 void UTalentButton::LockTalent()
 {
 	bIsLocked = true;
-	FButtonStyle ButtonStyle = Talent->GetStyle();
-	ButtonStyle.SetNormal(DisabledBrush);
-	ButtonStyle.SetHovered(DisabledBrush);
-	ButtonStyle.SetPressed(DisabledBrush);
-	Talent->SetStyle(ButtonStyle);
-	if (Counter > 0)
-	{
-		OnTalentClicked.Broadcast(this, -Counter);
-		TalentTreeCharacter->SetTalentPoints(TalentTreeCharacter->GetTalentPoints() + Counter);
-		Counter = 0;
-		VisualUpdate();
-	}
-	RankBorder->SetVisibility(ESlateVisibility::Collapsed);
+	UpdateVisualState();
+	HandleRankIncrement(false);
 }
 
 void UTalentButton::UnlockTalent()
 {
 	bIsLocked = false;
+	UpdateVisualState();
+}
+
+void UTalentButton::UpdateVisualState() const
+{
 	FButtonStyle ButtonStyle = Talent->GetStyle();
-	ButtonStyle.SetNormal(NormalBrush);
-	ButtonStyle.SetHovered(HoveredBrush);
-	ButtonStyle.SetPressed(PressedBrush);
+	if (bIsLocked)
+	{
+		ButtonStyle.SetNormal(DisabledBrush);
+		ButtonStyle.SetHovered(DisabledBrush);
+		ButtonStyle.SetPressed(DisabledBrush);
+		RankBorder->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	else
+	{
+		ButtonStyle.SetNormal(NormalBrush);
+		ButtonStyle.SetHovered(HoveredBrush);
+		ButtonStyle.SetPressed(PressedBrush);
+		RankBorder->SetVisibility(ESlateVisibility::HitTestInvisible);
+	}
 	Talent->SetStyle(ButtonStyle);
-	RankBorder->SetVisibility(ESlateVisibility::HitTestInvisible);
+}
+
+void UTalentButton::UpdateDescriptionTab() const
+{
+	if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(DescriptionTab->Slot))
+	{
+		FVector2D Pos = CanvasSlot->GetPosition();
+		FVector2D Size = CanvasSlot->GetSize();
+		if (Counter < MaxRank)
+		{
+			CurrentRank->SetColorAndOpacity(AvailableRankColor);
+			NextRankVB->SetVisibility(ESlateVisibility::HitTestInvisible);
+			Pos.Y = DescriptionTabYPosition;
+			Size.Y = DescriptionTabYSize;
+		}
+		else
+		{
+			CurrentRank->SetColorAndOpacity(TalentMaxedColor);
+			NextRankVB->SetVisibility(ESlateVisibility::Collapsed);
+			Pos.Y += POSITION_TO_REDUCE_DESCRIPTION_WHEN_MAXED;
+			Size.Y -= SIZE_TO_REDUCE_DESCRIPTION_WHEN_MAXED;
+		}
+		CanvasSlot->SetPosition(Pos);
+		CanvasSlot->SetSize(Size);
+	}
 }

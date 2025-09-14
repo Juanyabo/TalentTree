@@ -114,7 +114,22 @@ class TALENTTREE_API UTalentButton : public UUserWidget
 	void HideDescriptionTab();
 
 	UFUNCTION()
-	void VisualUpdate() const;
+	void HandleRankIncrement(const bool bIsAdding);
+
+	UFUNCTION()
+	void ApplyRankChange(const int32 Increment);
+
+	UFUNCTION()
+	void ResetRank();
+	
+	UFUNCTION()
+	void HandleRankVisual() const;
+
+	UFUNCTION()
+	void UpdateVisualState() const;
+	
+	UFUNCTION()
+	void UpdateDescriptionTab() const;
 
 public:
 	FOnTalentClicked OnTalentClicked;

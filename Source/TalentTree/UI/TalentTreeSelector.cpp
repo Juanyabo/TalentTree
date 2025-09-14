@@ -108,7 +108,7 @@ void UTalentTreeSelector::UpdateTotalPointsSpent(const int32 PointsSpent) const
 		SecondSpecializationTree->NoPointsAvailable();
 		ThirdSpecializationTree->NoPointsAvailable();
 	}
-	else if (PointsSpent == 1)
+	else if (PointsSpent >= 1)
 	{
 		FirstSpecializationTree->PointsAvailable();
 		SecondSpecializationTree->PointsAvailable();
