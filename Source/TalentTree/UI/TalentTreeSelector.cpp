@@ -17,7 +17,6 @@ void UTalentTreeSelector::NativeConstruct()
 	
 	UnselectedColor = FirstSpecializationName->GetColorAndOpacity();
 	bCanAddPoints = false;
-	ShowFirstSpecialization();
 	
 	Close->OnClicked.AddDynamic(this, &UTalentTreeSelector::HideTalentTreeSelector);
 	FirstSpecialization->OnClicked.AddDynamic(this, &UTalentTreeSelector::ShowFirstSpecialization);
@@ -26,6 +25,7 @@ void UTalentTreeSelector::NativeConstruct()
 	FirstSpecializationTree->OnTotalPointsSpend.BindUObject(this, &UTalentTreeSelector::UpdatePointsSpentOnFirstSpecialization);
 	SecondSpecializationTree->OnTotalPointsSpend.BindUObject(this, &UTalentTreeSelector::UpdatePointsSpentOnSecondSpecialization);
 	ThirdSpecializationTree->OnTotalPointsSpend.BindUObject(this, &UTalentTreeSelector::UpdatePointsSpentOnThirdSpecialization);
+	
 	if (const APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
 	{
 		if (ATalentTreeCharacter* Character = Cast<ATalentTreeCharacter>(PlayerController->GetPawn()))
@@ -33,6 +33,8 @@ void UTalentTreeSelector::NativeConstruct()
 			Character->OnTalentPointsUpdate.BindUObject(this, &UTalentTreeSelector::UpdateTotalPointsSpent);
 		}
 	}
+
+	ShowFirstSpecialization();
 }
 
 void UTalentTreeSelector::HideTalentTreeSelector()
@@ -42,47 +44,17 @@ void UTalentTreeSelector::HideTalentTreeSelector()
 
 void UTalentTreeSelector::ShowFirstSpecialization()
 {
-	FirstSpecializationPfp->SetVisibility(ESlateVisibility::HitTestInvisible);
-	SecondSpecializationPfp->SetVisibility(ESlateVisibility::Hidden);
-	ThirdSpecializationPfp->SetVisibility(ESlateVisibility::Hidden);
-	FirstSpecializationName->SetColorAndOpacity(SelectedSpecialization);
-	SecondSpecializationName->SetColorAndOpacity(UnselectedColor);
-	ThirdSpecializationName->SetColorAndOpacity(UnselectedColor);
-	FirstSpecializationTree->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	SecondSpecializationTree->SetVisibility(ESlateVisibility::Collapsed);
-	ThirdSpecializationTree->SetVisibility(ESlateVisibility::Collapsed);
-	TalentName->SetText(FirstSpecializationName->GetText());
-	UpdatePointsSpentOnFirstSpecialization(FirstSpecializationTree->GetTotalPointsSpent());
+	ShowSpecialization(0);
 }
 
 void UTalentTreeSelector::ShowSecondSpecialization()
 {
-	FirstSpecializationPfp->SetVisibility(ESlateVisibility::Hidden);
-	SecondSpecializationPfp->SetVisibility(ESlateVisibility::HitTestInvisible);
-	ThirdSpecializationPfp->SetVisibility(ESlateVisibility::Hidden);
-	FirstSpecializationName->SetColorAndOpacity(UnselectedColor);
-	SecondSpecializationName->SetColorAndOpacity(SelectedSpecialization);
-	ThirdSpecializationName->SetColorAndOpacity(UnselectedColor);
-	FirstSpecializationTree->SetVisibility(ESlateVisibility::Collapsed);
-	SecondSpecializationTree->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	ThirdSpecializationTree->SetVisibility(ESlateVisibility::Collapsed);
-	TalentName->SetText(SecondSpecializationName->GetText());
-	UpdatePointsSpentOnSecondSpecialization(SecondSpecializationTree->GetTotalPointsSpent());
+	ShowSpecialization(1);
 }
 
 void UTalentTreeSelector::ShowThirdSpecialization()
 {
-	FirstSpecializationPfp->SetVisibility(ESlateVisibility::Hidden);
-	SecondSpecializationPfp->SetVisibility(ESlateVisibility::Hidden);
-	ThirdSpecializationPfp->SetVisibility(ESlateVisibility::HitTestInvisible);
-	FirstSpecializationName->SetColorAndOpacity(UnselectedColor);
-	SecondSpecializationName->SetColorAndOpacity(UnselectedColor);
-	ThirdSpecializationName->SetColorAndOpacity(SelectedSpecialization);
-	FirstSpecializationTree->SetVisibility(ESlateVisibility::Collapsed);
-	SecondSpecializationTree->SetVisibility(ESlateVisibility::Collapsed);
-	ThirdSpecializationTree->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	TalentName->SetText(ThirdSpecializationName->GetText());
-	UpdatePointsSpentOnThirdSpecialization(ThirdSpecializationTree->GetTotalPointsSpent());
+	ShowSpecialization(2);
 }
 
 void UTalentTreeSelector::UpdatePointsSpentOnFirstSpecialization(const int32 PointsSpent) const
@@ -124,5 +96,59 @@ void UTalentTreeSelector::UpdateTotalPointsSpent(const int32 PointsSpent)
 	else
 	{
 		bCanAddPoints = false;
+	}
+}
+
+void UTalentTreeSelector::ShowSpecialization(const int32 Index) const
+{
+	TArray Specializations = { FirstSpecializationTree, SecondSpecializationTree, ThirdSpecializationTree };
+	TArray ProfilePictures = { FirstSpecializationPfp, SecondSpecializationPfp, ThirdSpecializationPfp };
+	TArray Names = { FirstSpecializationName, SecondSpecializationName, ThirdSpecializationName };
+
+	for (int32 i = 0; i < Specializations.Num(); ++i)
+	{
+		if (i == Index)
+		{
+			ProfilePictures[i]->SetVisibility(ESlateVisibility::HitTestInvisible);
+		}
+		else
+		{
+			ProfilePictures[i]->SetVisibility(ESlateVisibility::Hidden);
+		}
+		
+		if (i == Index)
+		{
+			Names[i]->SetColorAndOpacity(SelectedSpecialization);
+		}
+		else
+		{
+			Names[i]->SetColorAndOpacity(UnselectedColor);
+		}
+		
+		if (i == Index)
+		{
+			Specializations[i]->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		}
+		else
+		{
+			Specializations[i]->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+	
+	TalentName->SetText(Names[Index]->GetText());
+
+	switch (Index)
+	{
+		case 0:
+			UpdatePointsSpentOnFirstSpecialization(Specializations[Index]->GetTotalPointsSpent());
+			break;
+		case 1:
+			UpdatePointsSpentOnSecondSpecialization(Specializations[Index]->GetTotalPointsSpent());
+			break;
+		case 2:
+			UpdatePointsSpentOnThirdSpecialization(Specializations[Index]->GetTotalPointsSpent());
+			break;
+		default:
+			break;
 	}
 }

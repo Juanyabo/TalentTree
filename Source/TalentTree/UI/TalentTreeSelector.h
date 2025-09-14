@@ -95,6 +95,9 @@ class TALENTTREE_API UTalentTreeSelector : public UUserWidget
 
 	UFUNCTION()
 	void UpdateTotalPointsSpent(const int32 PointsSpent);
+
+	UFUNCTION()
+	void ShowSpecialization(const int32 Index) const;
 	
 public:
 	UFUNCTION()
