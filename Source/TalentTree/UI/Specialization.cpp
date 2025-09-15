@@ -6,6 +6,7 @@
 
 #include "Specialization.h"
 #include "Components/Border.h"
+#include "Components/TextBlock.h"
 #include "TalentTree/UI/TalentButton.h"
 
 void USpecialization::NativeConstruct()
@@ -96,6 +97,16 @@ void USpecialization::HandleTier(const int32 Tier, const bool bLock) const
 		{
 			for (int32 Talent = 0; Talent < Tiers[Tier].Talents.Num() ; ++Talent)
 			{
+				if (bLock)
+				{
+					FString NewDescription = FString::Printf(TEXT("Requires %d points"), PointsRequiredForTiers[Tier - 1]);
+					const FText NewDescriptionToText = FText::FromString(NewDescription);
+					Tiers[Tier].Talents[Talent]->GetRequirement()->SetText(NewDescriptionToText);
+				}
+				else
+				{
+					Tiers[Tier].Talents[Talent]->GetRequirement()->SetText(Tiers[Tier].Talents[Talent]->GetAvailableDescription());
+				}
 				Tiers[Tier].Talents[Talent]->HandleTalent(bLock);
 			}
 		}

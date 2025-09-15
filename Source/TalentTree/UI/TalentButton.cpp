@@ -29,6 +29,7 @@ void UTalentButton::NativeConstruct()
 
 	DescriptionTabYPositionReduced += POSITION_TO_REDUCE_DESCRIPTION_WHEN_MAXED_OR_LOCKED;
 	DescriptionTabYSizeReduced -= SIZE_TO_REDUCE_DESCRIPTION_WHEN_MAXED_OR_LOCKED;
+	AvailableDescription = Requirement->GetText();
 	
 	AvailableRankColor = FLinearColor(
 		CurrentRank->GetColorAndOpacity().GetSpecifiedColor().R,
@@ -183,6 +184,7 @@ void UTalentButton::UpdateVisualState() const
 		ButtonStyle.SetHovered(DisabledBrush);
 		ButtonStyle.SetPressed(DisabledBrush);
 		RankBorder->SetVisibility(ESlateVisibility::Collapsed);
+		Requirement->SetColorAndOpacity(LockedColor);
 		HandleNextDescription(false);
 	}
 	else
@@ -191,6 +193,7 @@ void UTalentButton::UpdateVisualState() const
 		ButtonStyle.SetHovered(HoveredBrush);
 		ButtonStyle.SetPressed(PressedBrush);
 		RankBorder->SetVisibility(ESlateVisibility::HitTestInvisible);
+		Requirement->SetColorAndOpacity(AvailableRankColor);
 		HandleNextDescription(true);
 	}
 	
@@ -202,11 +205,13 @@ void UTalentButton::UpdateDescriptionTab() const
 	if (Counter < MaxRank)
 	{
 		CurrentRank->SetColorAndOpacity(AvailableRankColor);
+		Requirement->SetVisibility(ESlateVisibility::HitTestInvisible);
 		HandleNextDescription(true);
 	}
 	else
 	{
-		CurrentRank->SetColorAndOpacity(TalentMaxedColor);
+		CurrentRank->SetColorAndOpacity(MaxedColor);
+		Requirement->SetVisibility(ESlateVisibility::Collapsed);
 		HandleNextDescription(false);
 	}
 }

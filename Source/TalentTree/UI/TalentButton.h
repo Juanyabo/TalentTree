@@ -56,6 +56,9 @@ class TALENTTREE_API UTalentButton : public UUserWidget
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
 	UTextBlock* NextDescription;
 
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
+	UTextBlock* Requirement;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Lock", meta = (AllowPrivateAccess = "true"))
 	int32 Tier;
 
@@ -63,7 +66,7 @@ class TALENTTREE_API UTalentButton : public UUserWidget
 	UTexture2D* Image;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rank", meta = (AllowPrivateAccess = "true"))
-	FLinearColor TalentMaxedColor;
+	FLinearColor MaxedColor;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rank", meta = (AllowPrivateAccess = "true"))
 	int32 MaxRank;
@@ -73,6 +76,9 @@ class TALENTTREE_API UTalentButton : public UUserWidget
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Description", meta = (AllowPrivateAccess = "true"))
 	FString Description;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Description", meta = (AllowPrivateAccess = "true"))
+	FLinearColor LockedColor;
 
 	UPROPERTY()
 	int32 Counter;
@@ -91,6 +97,9 @@ class TALENTTREE_API UTalentButton : public UUserWidget
 
 	UPROPERTY()
 	float DescriptionTabYSizeReduced;
+
+	UPROPERTY()
+	FText AvailableDescription;
 
 	UPROPERTY()
 	FLinearColor AvailableRankColor;
@@ -148,9 +157,11 @@ public:
 
 	FORCEINLINE UBorder* GetRankBorder() const { return RankBorder; }
 	FORCEINLINE int32 GetMaxRank() const { return MaxRank; }
+	FORCEINLINE UTextBlock* GetRequirement() const { return Requirement; }
 	FORCEINLINE int32 GetTier() const { return Tier; }
 	FORCEINLINE int32 GetCounter() const { return Counter; }
 	FORCEINLINE bool IsLocked() const { return bIsLocked; }
+	FORCEINLINE FText GetAvailableDescription() const { return AvailableDescription; }
 
 protected:
 	virtual void NativeConstruct() override;
