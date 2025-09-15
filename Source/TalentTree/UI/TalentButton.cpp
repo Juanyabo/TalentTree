@@ -5,7 +5,6 @@
 // 
 
 #include "TalentButton.h"
-#include "TalentTreeSelector.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanelSlot.h"
