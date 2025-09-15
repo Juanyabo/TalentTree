@@ -6,7 +6,6 @@
 
 #include "Specialization.h"
 #include "Components/Border.h"
-#include "Components/HorizontalBox.h"
 #include "TalentTree/UI/TalentButton.h"
 
 void USpecialization::NativeConstruct()
